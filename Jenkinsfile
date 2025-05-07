@@ -70,7 +70,7 @@ steps {
 checkout scmGit(
 branches: [[name: '*/master']],
 extensions: [],
-userRemoteConfigs: [[url: 'https://github.com/xx/Teedy.git']]
+userRemoteConfigs: [[url: 'https://github.com/aurora324/Teedy.git']]
 // your github Repository
 )
 sh 'mvn -B -DskipTests clean package'
