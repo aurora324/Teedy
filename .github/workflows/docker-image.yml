@@ -55,7 +55,7 @@ jobs:
           id: metadata
           uses: docker/metadata-action@v3
           with:
-            images: bingqinwang/Teedy # Docker Hub repository
+            images: bingqinwang/teedy # Docker Hub repository
             flavor: |
               latest=false
             tags: |
