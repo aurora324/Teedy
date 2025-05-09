@@ -4,7 +4,9 @@
 /*/bin
 /*/gen
 /*/target
+/target
 /*/build
+/.vscode
 /out
 /.idea
 /.project
