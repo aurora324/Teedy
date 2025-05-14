@@ -174,6 +174,55 @@
 //     }
 // }
 
+// pipeline {
+//     agent any
+
+//     environment {
+//         DEPLOYMENT_NAME = "hello-node"
+//         CONTAINER_NAME  = "docs"
+//         IMAGE_NAME      = "sismics/docs:latest"
+//         // 清除代理设置，避免干扰 kubectl
+//         HTTP_PROXY      = ""
+//         HTTPS_PROXY     = ""
+//         http_proxy      = ""
+//         https_proxy     = ""
+//     }
+
+//     stages {
+//         stage('Start Minikube') {
+//             steps {
+//                 sh '''
+//                     if ! minikube status | grep -q "Running"; then
+//                         echo "Starting Minikube..."
+//                         minikube start
+//                     else
+//                         echo "Minikube already running."
+//                     fi
+//                 '''
+//             }
+//         }
+
+//         stage('Set Image') {
+//             steps {
+//                 sh '''
+//                 echo "Setting image for deployment..."
+//                 unset http_proxy
+//                 unset https_proxy
+//                 kubectl set image deployment/${DEPLOYMENT_NAME} ${CONTAINER_NAME}=${IMAGE_NAME}
+//                 '''
+//             }
+//         }
+
+//         stage('Verify') {
+//             steps {
+//                 sh "kubectl rollout status deployment/${DEPLOYMENT_NAME}"
+//                 sh "kubectl get pods"
+//             }
+//         }
+//     }
+// }
+
+
 pipeline {
     agent any
 
@@ -181,20 +230,22 @@ pipeline {
         DEPLOYMENT_NAME = "hello-node"
         CONTAINER_NAME  = "docs"
         IMAGE_NAME      = "sismics/docs:latest"
-        // 清除代理设置，避免干扰 kubectl
         HTTP_PROXY      = ""
         HTTPS_PROXY     = ""
         http_proxy      = ""
         https_proxy     = ""
+        NO_PROXY        = "localhost,127.0.0.1"
     }
 
     stages {
         stage('Start Minikube') {
             steps {
                 sh '''
+                    echo "Checking Minikube..."
+                    unset http_proxy https_proxy HTTP_PROXY HTTPS_PROXY
                     if ! minikube status | grep -q "Running"; then
                         echo "Starting Minikube..."
-                        minikube start
+                        minikube start --force
                     else
                         echo "Minikube already running."
                     fi
@@ -205,18 +256,21 @@ pipeline {
         stage('Set Image') {
             steps {
                 sh '''
-                echo "Setting image for deployment..."
-                unset http_proxy
-                unset https_proxy
-                kubectl set image deployment/${DEPLOYMENT_NAME} ${CONTAINER_NAME}=${IMAGE_NAME}
+                    echo "Setting image for deployment..."
+                    unset http_proxy https_proxy HTTP_PROXY HTTPS_PROXY
+                    kubectl set image deployment/${DEPLOYMENT_NAME} ${CONTAINER_NAME}=${IMAGE_NAME}
                 '''
             }
         }
 
         stage('Verify') {
             steps {
-                sh "kubectl rollout status deployment/${DEPLOYMENT_NAME}"
-                sh "kubectl get pods"
+                sh '''
+                    echo "Verifying rollout..."
+                    unset http_proxy https_proxy HTTP_PROXY HTTPS_PROXY
+                    kubectl rollout status deployment/${DEPLOYMENT_NAME}
+                    kubectl get pods
+                '''
             }
         }
     }
