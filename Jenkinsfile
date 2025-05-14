@@ -120,55 +120,95 @@
 //     }
 // }
 
+// pipeline {
+//     agent any
+//     environment {
+//         // Docker Hub credentials ID (just the ID string)
+//         DOCKER_HUB_CREDENTIALS_ID = 'ff5be8f9-e6e9-4799-ad45-9a69fc3e1cde'
+//         DOCKER_IMAGE = 'bingqinwang/teedy'
+//         DOCKER_TAG = "${BUILD_NUMBER}"  // BUILD_NUMBER 是内建环境变量
+//     }
+//     stages {
+//         stage('Build') {
+//             steps {
+//                 checkout scmGit(
+//                     branches: [[name: '*/master']],
+//                     extensions: [],
+//                     userRemoteConfigs: [[url: 'https://github.com/aurora324/Teedy.git']]
+//                 )
+//                 sh 'mvn -B -DskipTests clean package'
+//             }
+//         }
+
+        // stage('Building image') {
+        //     steps {
+        //         script {
+        //             docker.build("${env.DOCKER_IMAGE}:${env.DOCKER_TAG}")
+        //         }
+        //     }
+        // }
+
+        // stage('Upload image') {
+        //     steps {
+        //         script {
+        //             docker.withRegistry('https://registry.hub.docker.com', env.DOCKER_HUB_CREDENTIALS_ID) {
+        //                 docker.image("${env.DOCKER_IMAGE}:${env.DOCKER_TAG}").push()
+        //                 docker.image("${env.DOCKER_IMAGE}:${env.DOCKER_TAG}").push('latest')
+        //             }
+        //         }
+        //     }
+        // }
+
+//         stage('Run containers') {
+//             steps {
+//                 script {
+//                     sh 'docker stop teedy-container-8081 || true'
+//                     sh 'docker rm teedy-container-8081 || true'
+//                     docker.image("${env.DOCKER_IMAGE}:${env.DOCKER_TAG}").run(
+//                         '--name teedy-container-8081 -d -p 8081:8080'
+//                     )
+//                     sh 'docker ps --filter "name=teedy-container"'
+//                 }
+//             }
+//         }
+//     }
+// }
+
 pipeline {
     agent any
+
     environment {
-        // Docker Hub credentials ID (just the ID string)
-        DOCKER_HUB_CREDENTIALS_ID = 'ff5be8f9-e6e9-4799-ad45-9a69fc3e1cde'
-        DOCKER_IMAGE = 'bingqinwang/teedy'
-        DOCKER_TAG = "${BUILD_NUMBER}"  // BUILD_NUMBER 是内建环境变量
+        DEPLOYMENT_NAME = "hello-node"
+        CONTAINER_NAME  = "docs"
+        IMAGE_NAME      = "sismics/docs:latest"
     }
+
     stages {
-        stage('Build') {
+        stage('Start Minikube') {
             steps {
-                checkout scmGit(
-                    branches: [[name: '*/master']],
-                    extensions: [],
-                    userRemoteConfigs: [[url: 'https://github.com/aurora324/Teedy.git']]
-                )
-                sh 'mvn -B -DskipTests clean package'
+                sh '''
+                    if ! minikube status | grep -q "Running"; then
+                        echo "Starting Minikube..."
+                        minikube start
+                    else
+                        echo "Minikube already running."
+                    fi
+                '''
             }
         }
 
-        stage('Building image') {
+        stage('Set Image') {
             steps {
-                script {
-                    docker.build("${env.DOCKER_IMAGE}:${env.DOCKER_TAG}")
-                }
+                // ✅ 使用 Groovy 插值方式传变量进入 shell
+                sh "echo 'Setting image for deployment...'"
+                sh "kubectl set image deployment/${DEPLOYMENT_NAME} ${CONTAINER_NAME}=${IMAGE_NAME}"
             }
         }
 
-        stage('Upload image') {
+        stage('Verify') {
             steps {
-                script {
-                    docker.withRegistry('https://registry.hub.docker.com', env.DOCKER_HUB_CREDENTIALS_ID) {
-                        docker.image("${env.DOCKER_IMAGE}:${env.DOCKER_TAG}").push()
-                        docker.image("${env.DOCKER_IMAGE}:${env.DOCKER_TAG}").push('latest')
-                    }
-                }
-            }
-        }
-
-        stage('Run containers') {
-            steps {
-                script {
-                    sh 'docker stop teedy-container-8081 || true'
-                    sh 'docker rm teedy-container-8081 || true'
-                    docker.image("${env.DOCKER_IMAGE}:${env.DOCKER_TAG}").run(
-                        '--name teedy-container-8081 -d -p 8081:8080'
-                    )
-                    sh 'docker ps --filter "name=teedy-container"'
-                }
+                sh "kubectl rollout status deployment/${DEPLOYMENT_NAME}"
+                sh "kubectl get pods"
             }
         }
     }
