@@ -199,9 +199,12 @@ pipeline {
 
         stage('Set Image') {
             steps {
-                // ✅ 使用 Groovy 插值方式传变量进入 shell
-                sh "echo 'Setting image for deployment...'"
-                sh "kubectl set image deployment/${DEPLOYMENT_NAME} ${CONTAINER_NAME}=${IMAGE_NAME}"
+                sh '''
+                echo "Setting image for deployment..."
+                unset http_proxy
+                unset https_proxy
+                kubectl set image deployment/${DEPLOYMENT_NAME} ${CONTAINER_NAME}=${IMAGE_NAME}
+                '''
             }
         }
 
