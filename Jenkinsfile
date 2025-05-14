@@ -181,6 +181,11 @@ pipeline {
         DEPLOYMENT_NAME = "hello-node"
         CONTAINER_NAME  = "docs"
         IMAGE_NAME      = "sismics/docs:latest"
+        // 清除代理设置，避免干扰 kubectl
+        HTTP_PROXY      = ""
+        HTTPS_PROXY     = ""
+        http_proxy      = ""
+        https_proxy     = ""
     }
 
     stages {
