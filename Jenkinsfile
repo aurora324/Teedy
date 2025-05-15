@@ -446,7 +446,7 @@ pipeline {
    environment {
       DEPLOYMENT_NAME = "hello-node"
       CONTAINER_NAME  = "docs"
-      IMAGE_NAME      = "sismics/docs:latest"
+      IMAGE_NAME      = "sismics/docs:v1.11"
       HTTP_PROXY      = ""
       HTTPS_PROXY     = ""
       http_proxy      = ""
