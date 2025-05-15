@@ -352,27 +352,117 @@
 // }
 
 
-pipeline {
-    agent any
+// pipeline {
+//     agent any
 
-    environment {
-        DEPLOYMENT_NAME = "hello-node"
-        CONTAINER_NAME  = "docs"
-        IMAGE_NAME      = "sismics/docs:v1.11"
-        HTTP_PROXY = ""
-        HTTPS_PROXY = ""
-        http_proxy = ""
-        https_proxy = ""
+//     environment {
+//         DEPLOYMENT_NAME = "hello-node"
+//         CONTAINER_NAME  = "docs"
+//         IMAGE_NAME      = "sismics/docs:v1.11"
+//         HTTP_PROXY = ""
+//         HTTPS_PROXY = ""
+//         http_proxy = ""
+//         https_proxy = ""
+//     }
+
+//     stages {
+//         stage('Start Minikube') {
+//             steps {
+//                 sh '''
+//                     unset http_proxy https_proxy HTTP_PROXY HTTPS_PROXY
+//                     echo "Checking Minikube..."
+//                     if ! minikube status | grep -q "Running"; then
+//                         minikube start --force
+//                     else
+//                         echo "Minikube already running."
+//                     fi
+//                 '''
+//             }
+//         }
+
+//         stage('Load Docker Image') {
+//             steps {
+//                 script {
+//                     // 安全地加载镜像，避免重复加载和无限挂起
+//                     try {
+//                         timeout(time: 2, unit: 'MINUTES') {
+//                             sh """
+//                                 unset http_proxy https_proxy HTTP_PROXY HTTPS_PROXY
+//                                 echo "Attempting to load image: ${IMAGE_NAME} into Minikube..."
+//                                 if ! docker images | grep -q "${IMAGE_NAME.split(':')[0]}"; then
+//                                     echo "Image not found locally, pulling..."
+//                                     docker pull ${IMAGE_NAME}
+//                                 fi
+//                                 minikube image load ${IMAGE_NAME}
+//                             """
+//                         }
+//                     } catch (err) {
+//                         echo "⚠️ Warning: Failed to load image ${IMAGE_NAME} into Minikube. Continuing anyway."
+//                     }
+//                 }
+//             }
+//         }
+
+//         stage('Set Image') {
+//             steps {
+//                 sh """
+//                     unset http_proxy https_proxy HTTP_PROXY HTTPS_PROXY
+//                     echo "Setting image for deployment..."
+//                     if ! kubectl get deployment ${DEPLOYMENT_NAME}; then
+//                         kubectl create deployment ${DEPLOYMENT_NAME} --image=${IMAGE_NAME}
+//                     else
+//                         kubectl set image deployment/${DEPLOYMENT_NAME} ${CONTAINER_NAME}=${IMAGE_NAME}
+//                     fi
+//                 """
+//             }
+//         }
+
+//         stage('Force Cleanup Old Pods') {
+//             steps {
+//                 sh """
+//                     unset http_proxy https_proxy HTTP_PROXY HTTPS_PROXY
+//                     echo "Force deleting old pods to unblock rollout..."
+//                     kubectl delete pod -l app=${DEPLOYMENT_NAME} --grace-period=0 --force || true
+//                 """
+//             }
+//         }
+
+//         stage('Verify') {
+//             steps {
+//                 sh """
+//                     unset http_proxy https_proxy HTTP_PROXY HTTPS_PROXY
+//                     echo "Verifying deployment..."
+//                     kubectl rollout status deployment/${DEPLOYMENT_NAME}
+//                     kubectl get pods
+//                 """
+//             }
+//         }
+//     }
+// }
+
+pipeline {
+   agent any
+
+   environment {
+      DEPLOYMENT_NAME = "hello-node"
+      CONTAINER_NAME  = "docs"
+      IMAGE_NAME      = "sismics/docs:latest"
+      //HTTP_PROXY      = ""
+      //HTTPS_PROXY     = ""
+      //http_proxy      = ""
+      //https_proxy     = ""
     }
 
     stages {
         stage('Start Minikube') {
             steps {
                 sh '''
-                    unset http_proxy https_proxy HTTP_PROXY HTTPS_PROXY
-                    echo "Checking Minikube..."
+                     unset http_proxy https_proxy HTTP_PROXY HTTPS_PROXY
                     if ! minikube status | grep -q "Running"; then
-                        minikube start --force
+                        echo "Starting Minikube..."
+                        minikube start
+                        docker pull sismics/docs:v1.11
+                        minikube image load sismics/docs:v1.11
                     else
                         echo "Minikube already running."
                     fi
@@ -380,61 +470,23 @@ pipeline {
             }
         }
 
-        stage('Load Docker Image') {
-            steps {
-                script {
-                    // 安全地加载镜像，避免重复加载和无限挂起
-                    try {
-                        timeout(time: 2, unit: 'MINUTES') {
-                            sh """
-                                unset http_proxy https_proxy HTTP_PROXY HTTPS_PROXY
-                                echo "Attempting to load image: ${IMAGE_NAME} into Minikube..."
-                                if ! docker images | grep -q "${IMAGE_NAME.split(':')[0]}"; then
-                                    echo "Image not found locally, pulling..."
-                                    docker pull ${IMAGE_NAME}
-                                fi
-                                minikube image load ${IMAGE_NAME}
-                            """
-                        }
-                    } catch (err) {
-                        echo "⚠️ Warning: Failed to load image ${IMAGE_NAME} into Minikube. Continuing anyway."
-                    }
-                }
-            }
-        }
-
         stage('Set Image') {
             steps {
-                sh """
+                sh '''
                     unset http_proxy https_proxy HTTP_PROXY HTTPS_PROXY
                     echo "Setting image for deployment..."
-                    if ! kubectl get deployment ${DEPLOYMENT_NAME}; then
-                        kubectl create deployment ${DEPLOYMENT_NAME} --image=${IMAGE_NAME}
-                    else
-                        kubectl set image deployment/${DEPLOYMENT_NAME} ${CONTAINER_NAME}=${IMAGE_NAME}
-                    fi
-                """
-            }
-        }
-
-        stage('Force Cleanup Old Pods') {
-            steps {
-                sh """
-                    unset http_proxy https_proxy HTTP_PROXY HTTPS_PROXY
-                    echo "Force deleting old pods to unblock rollout..."
-                    kubectl delete pod -l app=${DEPLOYMENT_NAME} --grace-period=0 --force || true
-                """
+                    kubectl set image deployment/${DEPLOYMENT_NAME} ${CONTAINER_NAME}=${IMAGE_NAME}
+                '''
             }
         }
 
         stage('Verify') {
             steps {
-                sh """
+                sh '''
                     unset http_proxy https_proxy HTTP_PROXY HTTPS_PROXY
-                    echo "Verifying deployment..."
                     kubectl rollout status deployment/${DEPLOYMENT_NAME}
                     kubectl get pods
-                """
+                '''
             }
         }
     }
