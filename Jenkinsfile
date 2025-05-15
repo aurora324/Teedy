@@ -447,10 +447,10 @@ pipeline {
       DEPLOYMENT_NAME = "hello-node"
       CONTAINER_NAME  = "docs"
       IMAGE_NAME      = "sismics/docs:latest"
-      //HTTP_PROXY      = ""
-      //HTTPS_PROXY     = ""
-      //http_proxy      = ""
-      //https_proxy     = ""
+      HTTP_PROXY      = ""
+      HTTPS_PROXY     = ""
+      http_proxy      = ""
+      https_proxy     = ""
     }
 
     stages {
@@ -466,6 +466,10 @@ pipeline {
                     else
                         echo "Minikube already running."
                     fi
+                    
+                    echo "Pulling and loading Docker image..."
+                    docker pull ${IMAGE_NAME}
+                    minikube image load ${IMAGE_NAME}
                 '''
             }
         }
