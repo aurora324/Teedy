@@ -440,35 +440,97 @@
 //     }
 // }
 
-pipeline {
-   agent any
+// pipeline {
+//    agent any
 
-   environment {
-      DEPLOYMENT_NAME = "hello-node"
-      CONTAINER_NAME  = "docs"
-      IMAGE_NAME      = "sismics/docs:v1.11"
-      HTTP_PROXY      = ""
-      HTTPS_PROXY     = ""
-      http_proxy      = ""
-      https_proxy     = ""
+//    environment {
+//       DEPLOYMENT_NAME = "hello-node"
+//       CONTAINER_NAME  = "docs"
+//       IMAGE_NAME      = "sismics/docs:v1.11"
+//       HTTP_PROXY      = ""
+//       HTTPS_PROXY     = ""
+//       http_proxy      = ""
+//       https_proxy     = ""
+//     }
+
+//     stages {
+//         stage('Start Minikube') {
+//             steps {
+//                 sh '''
+//                      unset http_proxy https_proxy HTTP_PROXY HTTPS_PROXY
+//                     if ! minikube status | grep -q "Running"; then
+//                         echo "Starting Minikube..."
+//                         minikube start
+//                         docker pull sismics/docs:v1.11
+//                         minikube image load sismics/docs:v1.11
+//                     else
+//                         echo "Minikube already running."
+//                     fi
+                    
+//                     echo "Pulling and loading Docker image..."
+//                     docker pull ${IMAGE_NAME}
+//                     minikube image load ${IMAGE_NAME}
+//                 '''
+//             }
+//         }
+
+//         stage('Set Image') {
+//             steps {
+//                 sh '''
+//                     unset http_proxy https_proxy HTTP_PROXY HTTPS_PROXY
+//                     echo "Setting image for deployment..."
+//                     kubectl set image deployment/${DEPLOYMENT_NAME} ${CONTAINER_NAME}=${IMAGE_NAME}
+//                 '''
+//             }
+//         }
+
+//         stage('Verify') {
+//             steps {
+//                 sh '''
+//                     unset http_proxy https_proxy HTTP_PROXY HTTPS_PROXY
+//                     kubectl rollout status deployment/${DEPLOYMENT_NAME}
+//                     kubectl get pods
+//                 '''
+//             }
+//         }
+//     }
+// }
+
+
+pipeline {
+    agent any
+
+    environment {
+        DEPLOYMENT_NAME = "hello-node"
+        CONTAINER_NAME  = "docs"
+        IMAGE_NAME      = "sismics/docs:v1.11"
+        HTTP_PROXY      = ""
+        HTTPS_PROXY     = ""
+        http_proxy      = ""
+        https_proxy     = ""
     }
 
     stages {
         stage('Start Minikube') {
             steps {
                 sh '''
-                     unset http_proxy https_proxy HTTP_PROXY HTTPS_PROXY
+                    unset http_proxy https_proxy HTTP_PROXY HTTPS_PROXY
+
                     if ! minikube status | grep -q "Running"; then
                         echo "Starting Minikube..."
                         minikube start
-                        docker pull sismics/docs:v1.11
-                        minikube image load sismics/docs:v1.11
                     else
                         echo "Minikube already running."
                     fi
-                    
-                    echo "Pulling and loading Docker image..."
-                    docker pull ${IMAGE_NAME}
+
+                    echo "Attempting to pull Docker image ${IMAGE_NAME}..."
+
+                    # Try pulling with retries
+                    for i in {1..3}; do
+                        docker pull ${IMAGE_NAME} && break || sleep 5
+                    done
+
+                    echo "Loading image into Minikube..."
                     minikube image load ${IMAGE_NAME}
                 '''
             }
@@ -492,6 +554,12 @@ pipeline {
                     kubectl get pods
                 '''
             }
+        }
+    }
+
+    post {
+        failure {
+            echo "Pipeline failed. Please check Docker image pull connectivity or Docker Hub limits."
         }
     }
 }
