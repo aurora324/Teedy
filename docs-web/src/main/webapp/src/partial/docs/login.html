@@ -74,6 +74,44 @@
             </div>
           </div>
 
+          <!-- <div class="row">
+            <div class="col-md-12 pl-md-5">
+              <button class="btn btn-success" ng-click="register()">
+                {{ 'login & register' | translate }}
+              </button>
+            </div>
+          </div> -->
+          <div class="row">
+            <div class="col-md-12 pl-md-5">
+              <button class="btn btn-success custom-btn" ng-click="register()">
+                {{ 'login & register' | translate }}
+              </button>
+            </div>
+          </div>
+          
+          <style>
+            .custom-btn {
+              background-color: #28a745; /* 按钮背景色 */
+              border: none;
+              color: white; /* 字体颜色 */
+              font-size: 16px;
+              padding: 12px 30px; /* 按钮内边距 */
+              border-radius: 50px; /* 圆角 */
+              box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* 阴影效果 */
+              transition: all 0.3s ease-in-out; /* 动画效果 */
+            }
+          
+            .custom-btn:hover {
+              background-color: #218838; /* 鼠标悬停时的背景色 */
+              box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2); /* 鼠标悬停时的阴影效果 */
+              transform: translateY(-2px); /* 鼠标悬停时按钮上移 */
+            }
+          
+            .custom-btn:focus {
+              outline: none; /* 移除点击后的边框 */
+            }
+          </style>          
+
           <p class="text-center" ng-if="app.guest_login">&nbsp;</p>
 
           <button type="submit" class="btn btn-default btn-block" ng-if="app.guest_login" ng-click="loginAsGuest()">
