@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Editor</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+        }
+
+        h1 {
+            text-align: center;
+            color: #343a40;
+            margin-top: 20px;
+            font-size: 2rem;
+        }
+
+        #canvas {
+            display: block;
+            margin: 20px auto;
+            border: 1px solid #dee2e6;
+            background-color: #ffffff;
+            max-width: 100%;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 20px;
+            padding: 10px;
+        }
+
+        .controls button {
+            padding: 12px 24px;
+            font-size: 1rem;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .controls button:hover {
+            background-color: #0056b3;
+            transform: translateY(-2px);
+        }
+
+        .controls button:active {
+            transform: translateY(0);
+        }
+
+        .tool-options {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+            padding: 10px;
+            flex-direction: row;
+            flex-wrap: wrap;
+        }
+
+        .tool-options button {
+            padding: 12px 20px;
+            font-size: 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s ease, background-color 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 120px;
+            text-align: center;
+        }
+
+        .apply-btn {
+            background-color: #28a745;  /* Green for apply */
+            color: white;
+        }
+
+        .cancel-btn {
+            background-color: #dc3545;  /* Red for cancel */
+            color: white;
+        }
+
+        .tool-options button:hover {
+            transform: translateY(-2px);
+        }
+
+        .tool-options button:active {
+            transform: translateY(0);
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.5rem;
+            }
+
+            .controls button {
+                padding: 10px 18px;
+                font-size: 0.9rem;
+            }
+
+            .tool-options button {
+                width: 100%;
+                padding: 10px;
+                font-size: 0.9rem;
+            }
+
+            #brush-size {
+                width: 120px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.2rem;
+            }
+
+            .controls button {
+                padding: 8px 16px;
+                font-size: 0.8rem;
+            }
+
+            .tool-options button {
+                font-size: 0.8rem;
+                padding: 8px;
+            }
+
+            #brush-size {
+                width: 100px;
+            }
+        }
+
+        /* Optional: Center the editor container */
+        .editor-container {
+            width: 90%;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+
+<div class="editor-container">
+    <h1>Image Editor</h1>
+
+    <!-- Canvas -->
+    <canvas id="canvas"></canvas>
+
+    <!-- Controls -->
+    <div class="controls">
+        <button ng-click="rotateImage()">Rotate 90°</button>
+        <button ng-click="enableCrop()">Crop</button>
+        <button ng-click="enableDraw()">Draw</button>
+        <button ng-click="init()">Restore</button>
+        <button ng-click="saveImage()">Save to Local</button>
+        <button ng-click="saveToServer()">Save to Server</button>
+        <button ng-click="exitEditor()">Exit</button>
+    </div>
+
+    <!-- Crop Options -->
+    <div class="tool-options" id="crop-options" ng-show="isCropping">
+        <button class="apply-btn" ng-click="applyCrop()">Apply Crop</button>
+        <button class="cancel-btn" ng-click="cancelCrop()">Cancel Crop</button>
+    </div>
+
+    <!-- Draw Options -->
+    <div class="tool-options" id="draw-options" style="display: none;">
+        <label for="brush-color">Brush Color:</label>
+        <input type="color" id="brush-color" ng-model="brushColor" value="#000000" />
+        <label for="brush-size">Brush Size:</label>
+        <input type="range" id="brush-size" min="1" max="20" ng-model="brushSize" value="5" />
+    </div>
+</div>
+
+</body>
+</html>
